@@ -48,19 +48,20 @@ for TIME in TIMEs.collect():
 lltime=ltime[:]
 llphrase=lphrase[:]
 
+
+
 ltime=lltime[:]
 lphrase=llphrase[:]
+pid=lphrase.pop()
 res=[]
-cpt=0;
-#while not not lphrase:
-while not not cpt<2:
-	cpt=cpt+1
+N=10
+while not not lphrase:
 	res=[]
 	ltime=lltime[:]
 	pid=lphrase.pop()
 	cpt=0
 	f = open('/home/base/final/output/out_' + str(pid)+ '.txt', 'w')
-	while not not ltime:
+	while not not ltime and cpt<N:
 		tid=ltime.pop()
 		resPRICE_ID = sqlContext.sql("SELECT MAX(PRICE) as MPRICE FROM adv WHERE PHRASE_ID=" + str(pid) + " AND TIMESTAMP='" + tid + "'")
 		PRICE_IDs = resPRICE_ID.map(lambda q: q.MPRICE)
@@ -69,14 +70,15 @@ while not not cpt<2:
 		cpt=cpt+1
 	for item in res:
 		f.write("%s\n" % item)
-	f.close()	
+	f.close()
+	break	
 
 
 	
 
 f = open('/home/base/final/output/out_42.txt', 'r')
 
-Matrix = [[0 for x in range(2)] for x in range(377)]
+Matrix = [[0 for x in range(2)] for x in range(N)]
 first=1
 for line in f:
 	s=line.split()
@@ -86,9 +88,10 @@ for line in f:
 		fv=t2
 		break
 	print(t1 + ' * '+ t2 + ' * ')
+f.close()
 
-
-Matrix = [[0 for x in range(2)] for x in range(377)]
+f = open('/home/base/final/output/out_42.txt', 'r')
+Matrix = [[0 for x in range(2)] for x in range(N)]
 for line in f:
 	s=line.split()
 	t1=s[0]
@@ -103,51 +106,12 @@ for line in f:
 		fv=t2	
 f.close()	
 
-f = open('/home/base/final/output/out_280_v1.txt', 'w')
 
-for i in range(0,377):	
-	f.write("%s	" % Matrix[i][0])
-	f.write("%s\n" % Matrix[i][1])
-
-f.close()
-
-
-
-f = open('/home/base/final/output/out_42.txt', 'r')
-Matrix = [[0 for x in range(2)] for x in range(377)]
-first=1
-for line in f:
-	s=line.split()
-	t1=s[0]
-	t2=s[1]
-	if t2!='None':
-		fv=t2
-		break
-	print(t1 + ' * '+ t2 + ' * ')
-
-f.close()
-f = open('/home/base/final/output/out_42.txt', 'r')
-
-
-Matrix = [[0 for x in range(2)] for x in range(377)]
-
-for line in f:
-	s=line.split()
-	t1=s[0]
-	t2=s[1]
-	print(t1)
-	if t2=='None':
-		Matrix[int(t1)][0]=t1
-		Matrix[int(t1)][1]=fv
-	else:		
-		Matrix[int(t1)][0]=t1
-		Matrix[int(t1)][1]=t2
-		fv=t2	
-f.close()	
+	
 
 f = open('/home/base/final/output/out_42_v1.txt', 'w')
 
-for i in range(0,377):
+for i in range(0,N):
 	f.write("%s" % Matrix[i][1])	
 	f.write(" 1:%s\n" % Matrix[i][0])
 
@@ -155,7 +119,7 @@ f.close()
 
 f = open('/home/base/final/output/out_42_v2.txt', 'w')
 
-for i in range(0,377):	
+for i in range(0,N):	
 	f.write("%s	" % Matrix[i][0])
 	f.write("%s\n" % Matrix[i][1])
 
@@ -163,7 +127,7 @@ f.close()
 
 f = open('/home/base/final/output/out_42_v3.data', 'w')
 
-for i in range(0,377):	
+for i in range(0,N):	
 	f.write("%s," % Matrix[i][1])	
 	f.write("%s\n" % Matrix[i][0])
 
@@ -202,12 +166,12 @@ data = sc.textFile("/home/base/final/output/out_42_v3.data")
 parsedData = data.map(parsePoint)
 
 # Build the model
-model = LinearRegressionWithSGD.train(parsedData)
+model = LinearRegressionWithSGD.train(parsedData,iterations=20)
 
 # Evaluate the model on training data
 valuesAndPreds = parsedData.map(lambda p: (p.label, model.predict(p.features)))
 MSE = valuesAndPreds.map(lambda (v, p): (v - p)**2).reduce(lambda x, y: x + y) / valuesAndPreds.count()
-
+MSE
 
 
 
